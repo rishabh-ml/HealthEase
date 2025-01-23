@@ -1,31 +1,35 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, StyleSheet, TouchableOpacity, Alert, Image } from 'react-native';
-import authBg from '../assets/auth-bg.png';
-import secureIcon from '../assets/secure-icon.png';
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { auth } from '../../firebaseConfig'; // Import Firebase auth
+import authIcon from '../assets/auth-bg.png'; // Small icon placed above the Login text
+import secureIcon from '../assets/secure-icon.png'; // Lock icon for the password input
 
 export default function LoginScreen({ navigation }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
 
-  const handleLogin = () => {
-    // Dummy credentials for testing
-    const testEmail = 'test@example.com';
-    const testPassword = 'password123';
-
-    if (email === testEmail && password === testPassword) {
-      Alert.alert('Login Successful', 'Welcome to HealthEase!');
+  const handleLogin = async () => {
+    try {
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+      Alert.alert('Login Successful', `Welcome, ${user.email}`);
       navigation.navigate('PatientDashboard'); // Redirect to Patient Dashboard
-    } else {
-      Alert.alert('Login Failed', 'Invalid email or password. Please try again.');
+    } catch (error) {
+      console.error(error);
+      Alert.alert('Login Failed', error.message || 'Invalid email or password. Please try again.');
     }
   };
 
   return (
     <View style={styles.container}>
-      <Image source={authBg} style={styles.background} />
+      {/* Icon above Login text */}
+      <Image source={authIcon} style={styles.authIcon} />
 
       <Text style={styles.title}>Login</Text>
 
+      {/* Email Input */}
       <View style={styles.inputContainer}>
         <TextInput
           placeholder="Email"
@@ -37,21 +41,26 @@ export default function LoginScreen({ navigation }) {
         />
       </View>
 
+      {/* Password Input */}
       <View style={styles.inputContainer}>
         <TextInput
           placeholder="Password"
           style={styles.input}
           onChangeText={(text) => setPassword(text)}
           value={password}
-          secureTextEntry
+          secureTextEntry={!showPassword}
         />
-        <Image source={secureIcon} style={styles.icon} />
+        <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+          <Image source={secureIcon} style={styles.icon} />
+        </TouchableOpacity>
       </View>
 
+      {/* Login Button */}
       <TouchableOpacity style={styles.button} onPress={handleLogin}>
         <Text style={styles.buttonText}>Login</Text>
       </TouchableOpacity>
 
+      {/* Navigation to Sign Up */}
       <TouchableOpacity
         style={styles.linkButton}
         onPress={() => navigation.navigate('SignUpScreen')}
@@ -70,36 +79,37 @@ const styles = StyleSheet.create({
     padding: 20,
     backgroundColor: '#f5f5f5',
   },
-  background: {
-    position: 'absolute',
-    width: '100%',
-    height: '100%',
-    resizeMode: 'cover',
+  authIcon: {
+    width: 100, // Adjust based on the image size
+    height: 100,
+    marginBottom: 10,
   },
   title: {
     fontSize: 28,
     fontWeight: 'bold',
-    marginBottom: 20,
+    marginBottom: 30,
     color: '#333',
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     width: '100%',
-    marginBottom: 15,
-  },
-  input: {
-    flex: 1,
-    padding: 15,
+    marginBottom: 20,
     borderWidth: 1,
     borderRadius: 8,
     borderColor: '#ccc',
     backgroundColor: '#fff',
   },
+  input: {
+    flex: 1,
+    padding: 15,
+    fontSize: 16,
+  },
   icon: {
-    width: 20,
-    height: 20,
-    marginLeft: 10,
+    width: 24,
+    height: 24,
+    marginRight: 10,
+    tintColor: '#007BFF',
   },
   button: {
     backgroundColor: '#007BFF',
