@@ -1,9 +1,12 @@
+// screens/LoginScreen.js
 import React, { useState } from 'react';
 import { View, Text, TextInput, StyleSheet, TouchableOpacity, Alert, Image } from 'react-native';
 import { signInWithEmailAndPassword } from 'firebase/auth';
-import { auth } from '../../firebaseConfig'; // Import Firebase auth
-import authIcon from '../assets/auth-bg.png'; // Small icon placed above the Login text
-import secureIcon from '../assets/secure-icon.png'; // Lock icon for the password input
+import { auth, db } from '../../firebaseConfig';
+import { doc, getDoc } from 'firebase/firestore';
+
+import authIcon from '../assets/auth-bg.png'; // Icon
+import secureIcon from '../assets/secure-icon.png'; // Lock icon
 
 export default function LoginScreen({ navigation }) {
   const [email, setEmail] = useState('');
@@ -12,21 +15,37 @@ export default function LoginScreen({ navigation }) {
 
   const handleLogin = async () => {
     try {
+      // 1. Sign in with Firebase Auth
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
-      Alert.alert('Login Successful', `Welcome, ${user.email}`);
-      navigation.navigate('PatientDashboard'); // Redirect to Patient Dashboard
+      const firebaseUser = userCredential.user;
+
+      // 2. (Optional) Fetch user doc to confirm role, name, etc.
+      const userDocRef = doc(db, 'users', firebaseUser.uid);
+      const userDocSnap = await getDoc(userDocRef);
+
+      if (userDocSnap.exists()) {
+        const userData = userDocSnap.data();
+        const userRole = userData.role || 'patient';
+        Alert.alert(
+          'Login Successful',
+          userRole === 'doctor'
+            ? `Welcome, Dr. ${userData.name || firebaseUser.email}`
+            : `Welcome, ${userData.name || firebaseUser.email}`
+        );
+        // NO direct navigation to tabs. The top-level App.js
+        // onAuthStateChanged will re-render and show correct tab nav.
+      } else {
+        Alert.alert('Error', 'User document not found in Firestore.');
+      }
     } catch (error) {
-      console.error(error);
+      console.error('Login Error:', error);
       Alert.alert('Login Failed', error.message || 'Invalid email or password. Please try again.');
     }
   };
 
   return (
     <View style={styles.container}>
-      {/* Icon above Login text */}
       <Image source={authIcon} style={styles.authIcon} />
-
       <Text style={styles.title}>Login</Text>
 
       {/* Email Input */}
@@ -34,7 +53,7 @@ export default function LoginScreen({ navigation }) {
         <TextInput
           placeholder="Email"
           style={styles.input}
-          onChangeText={(text) => setEmail(text)}
+          onChangeText={setEmail}
           value={email}
           keyboardType="email-address"
           autoCapitalize="none"
@@ -46,7 +65,7 @@ export default function LoginScreen({ navigation }) {
         <TextInput
           placeholder="Password"
           style={styles.input}
-          onChangeText={(text) => setPassword(text)}
+          onChangeText={setPassword}
           value={password}
           secureTextEntry={!showPassword}
         />
@@ -61,16 +80,16 @@ export default function LoginScreen({ navigation }) {
       </TouchableOpacity>
 
       {/* Navigation to Sign Up */}
-      <TouchableOpacity
-        style={styles.linkButton}
-        onPress={() => navigation.navigate('SignUpScreen')}
-      >
+      <TouchableOpacity style={styles.linkButton} onPress={() => navigation.navigate('SignUpScreen')}>
         <Text style={styles.linkText}>Don't have an account? Sign Up</Text>
       </TouchableOpacity>
     </View>
   );
 }
 
+// ---------------------------------
+// Styles
+// ---------------------------------
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -80,7 +99,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#f5f5f5',
   },
   authIcon: {
-    width: 100, // Adjust based on the image size
+    width: 100,
     height: 100,
     marginBottom: 10,
   },

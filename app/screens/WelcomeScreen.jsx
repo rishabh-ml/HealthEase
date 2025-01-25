@@ -1,19 +1,24 @@
 import React from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
 import logo from '../assets/logo.png';
-import welcomeBg from '../assets/welcome-bg.png';
+import welcomeBg from '../assets/welcome-bg.png'; // Sticker-like image
 
 const WelcomeScreen = ({ navigation }) => {
   return (
     <View style={styles.container}>
-      <Image source={welcomeBg} style={styles.background} />
+      {/* Sticker or background image */}
+      <View style={styles.stickerContainer}>
+        <Image source={welcomeBg} style={styles.sticker} />
+      </View>
 
+      {/* Logo + App Title */}
       <View style={styles.logoContainer}>
         <Image source={logo} style={styles.logo} />
         <Text style={styles.title}>Welcome to HealthEase</Text>
         <Text style={styles.subtitle}>Your health, our priority</Text>
       </View>
 
+      {/* Buttons */}
       <View style={styles.buttonContainer}>
         <TouchableOpacity
           style={styles.button}
@@ -29,25 +34,38 @@ const WelcomeScreen = ({ navigation }) => {
           <Text style={styles.buttonText}>Sign Up</Text>
         </TouchableOpacity>
       </View>
+
+      {/* Optional Version or Footer Text */}
+      <Text style={styles.footerText}>Version 1.0.0</Text>
     </View>
   );
 };
 
+// ---------------------------------------------
+// Styles
+// ---------------------------------------------
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
     backgroundColor: '#f5f5f5',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  background: {
+  // Sticker near the top
+  stickerContainer: {
     position: 'absolute',
-    width: '100%',
-    height: '100%',
-    resizeMode: 'cover',
+    top: 100, // Adjust as needed for placement
+    alignItems: 'center',
   },
+  sticker: {
+    width: 200,
+    height: 80,
+    resizeMode: 'contain',
+  },
+  // Logo + Text
   logoContainer: {
     alignItems: 'center',
+    marginTop: 180, // space for sticker
     marginBottom: 40,
   },
   logo: {
@@ -67,9 +85,11 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 5,
   },
+  // Buttons
   buttonContainer: {
     width: '100%',
     paddingHorizontal: 20,
+    marginTop: 20,
   },
   button: {
     backgroundColor: '#007BFF',
@@ -85,6 +105,13 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  // Footer
+  footerText: {
+    position: 'absolute',
+    bottom: 10,
+    color: '#777',
+    fontSize: 12,
   },
 });
 
